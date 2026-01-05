@@ -79,68 +79,6 @@ int maxInt(int a, int b) {
     return (a > b) ? a : b;
 }
 
-// ==================== SIMPLE VECTOR REPLACEMENT ====================
-
-template <typename T>
-class SimpleVector {
-private:
-    T* data;
-    int capacity;
-    int count;
-
-public:
-    SimpleVector() : data(NULL), capacity(0), count(0) {}
-    
-    ~SimpleVector() {
-        if (data) delete[] data;
-    }
-    
-    void push_back(const T& value) {
-        if (count >= capacity) {
-            int newCapacity = (capacity == 0) ? 4 : capacity * 2;
-            T* newData = new T[newCapacity];
-            
-            for (int i = 0; i < count; i++) {
-                newData[i] = data[i];
-            }
-            
-            if (data) delete[] data;
-            data = newData;
-            capacity = newCapacity;
-        }
-        
-        data[count++] = value;
-    }
-    
-    void pop_back() {
-        if (count > 0) count--;
-    }
-    
-    T& operator[](int index) {
-        return data[index];
-    }
-    
-    const T& operator[](int index) const {
-        return data[index];
-    }
-    
-    int size() const { return count; }
-    bool empty() const { return count == 0; }
-    
-    void clear() {
-        count = 0;
-    }
-    
-    void erase(int index) {
-        if (index < 0 || index >= count) return;
-        
-        for (int i = index; i < count - 1; i++) {
-            data[i] = data[i + 1];
-        }
-        count--;
-    }
-};
-
 // ==================== CIRCULAR LINKED LIST IMPLEMENTATION ====================
 
 template <typename T>
@@ -268,29 +206,98 @@ public:
     }
 };
 
+// ==================== ARRAY DINAMIS SEDERHANA ====================
+
+template <typename T>
+class SimpleArray {
+private:
+    T* data;
+    int capacity;
+    int count;
+
+public:
+    SimpleArray() : data(NULL), capacity(0), count(0) {}
+    
+    ~SimpleArray() {
+        if (data) delete[] data;
+    }
+    
+    void add(const T& value) {
+        if (count >= capacity) {
+            int newCapacity = (capacity == 0) ? 4 : capacity * 2;
+            T* newData = new T[newCapacity];
+            
+            for (int i = 0; i < count; i++) {
+                newData[i] = data[i];
+            }
+            
+            if (data) delete[] data;
+            data = newData;
+            capacity = newCapacity;
+        }
+        
+        data[count++] = value;
+    }
+    
+    void removeAt(int index) {
+        if (index < 0 || index >= count) return;
+        
+        for (int i = index; i < count - 1; i++) {
+            data[i] = data[i + 1];
+        }
+        count--;
+    }
+    
+    T& operator[](int index) {
+        return data[index];
+    }
+    
+    const T& operator[](int index) const {
+        return data[index];
+    }
+    
+    int size() const { return count; }
+    bool empty() const { return count == 0; }
+    
+    void clear() {
+        count = 0;
+    }
+    
+    T* findById(int id) {
+        for (int i = 0; i < count; i++) {
+            if (data[i].id == id) {
+                return &data[i];
+            }
+        }
+        return NULL;
+    }
+};
+
 // ==================== AVL TREE IMPLEMENTATION ====================
 
 struct Member {
-    string id;
+    int id;
     string nama;
     string noTelepon;
+    string noKTP;
+    string tanggalLahir;
+    string alamat;
     int poin;
     double totalBelanja;
     string tanggalDaftar;
+    
+    bool operator<(const Member& other) const {
+        return poin < other.poin;
+    }
+    
+    bool operator>(const Member& other) const {
+        return poin > other.poin;
+    }
+    
+    bool operator==(const Member& other) const {
+        return noTelepon == other.noTelepon;
+    }
 };
-
-// Operator overloading untuk Member
-bool operator<(const Member& a, const Member& b) {
-    return a.poin < b.poin;
-}
-
-bool operator>(const Member& a, const Member& b) {
-    return a.poin > b.poin;
-}
-
-bool operator==(const Member& a, const Member& b) {
-    return a.noTelepon == b.noTelepon;
-}
 
 ostream& operator<<(ostream& os, const Member& member) {
     os << member.nama << " (" << member.noTelepon << ") - " << member.poin << " poin";
@@ -443,10 +450,10 @@ private:
         return root;
     }
     
-    void inorderTraversal(AVLNode* node, SimpleVector<T>& result) {
+    void inorderTraversal(AVLNode* node, SimpleArray<T>& result) {
         if (node) {
             inorderTraversal(node->left, result);
-            result.push_back(node->data);
+            result.add(node->data);
             inorderTraversal(node->right, result);
         }
     }
@@ -474,7 +481,7 @@ public:
         root = remove(root, data);
     }
     
-    void getAllMembers(SimpleVector<T>& result) {
+    void getAllMembers(SimpleArray<T>& result) {
         inorderTraversal(root, result);
     }
     
@@ -509,8 +516,9 @@ struct Pesanan {
     string tanggal;
     string namaPelanggan;
     string noTelepon;
+    string noKTP;
     string tipePesanan;
-    SimpleVector<PesananItem> items;
+    SimpleArray<PesananItem> items;
     double totalHarga;
     double pajak;
     double totalBayar;
@@ -556,30 +564,37 @@ public:
             return;
         }
         
-        SimpleVector<Member> allMembers;
+        SimpleArray<Member> allMembers;
         memberTree.getAllMembers(allMembers);
         
-        cout << "\n" << string(80, '=') << "\n";
+        cout << "\n" << string(100, '=') << "\n";
         cout << "           DAFTAR MEMBER LOYALTY\n";
-        cout << string(80, '=') << "\n";
+        cout << string(100, '=') << "\n";
         cout << left << setw(5) << "NO" << setw(20) << "NAMA" 
-             << setw(15) << "TELEPON" << setw(10) << "POIN" 
-             << setw(12) << "TIER" << setw(18) << "DISKON" << endl;
-        cout << string(80, '-') << "\n";
+             << setw(15) << "TELEPON" << setw(12) << "KTP" 
+             << setw(10) << "POIN" << setw(12) << "TIER" 
+             << setw(18) << "DISKON" << endl;
+        cout << string(100, '-') << "\n";
         
         for (int i = 0; i < allMembers.size(); i++) {
             const Member& member = allMembers[i];
             string tier = getTierByPoin(member.poin);
             double diskon = getDiskonByTier(tier);
             
+            string ktpDisplay = "Tidak ada";
+            if (!member.noKTP.empty()) {
+                ktpDisplay = "XXXX-XXXX-XXXX-" + member.noKTP.substr(member.noKTP.length() - 4);
+            }
+            
             cout << left << setw(5) << (i+1)
                  << setw(20) << (member.nama.length() > 18 ? member.nama.substr(0, 15) + "..." : member.nama)
                  << setw(15) << member.noTelepon
+                 << setw(12) << ktpDisplay
                  << setw(10) << member.poin
                  << setw(12) << tier
                  << fixed << setprecision(0) << setw(18) << (diskon * 100) << "%" << endl;
         }
-        cout << string(80, '=') << "\n";
+        cout << string(100, '=') << "\n";
     }
     
     void tampilkanTopMembers(int jumlah = 10) {
@@ -588,7 +603,7 @@ public:
             return;
         }
         
-        SimpleVector<Member> allMembers;
+        SimpleArray<Member> allMembers;
         memberTree.getAllMembers(allMembers);
         
         // Sort dari besar ke kecil
@@ -605,22 +620,22 @@ public:
         int limit = jumlah;
         if (limit > allMembers.size()) limit = allMembers.size();
         
-        cout << "\n" << string(80, '=') << "\n";
+        cout << "\n" << string(90, '=') << "\n";
         cout << "           TOP " << limit << " MEMBER LOYALTY\n";
-        cout << string(80, '=') << "\n";
+        cout << string(90, '=') << "\n";
         cout << left << setw(5) << "RANK" << setw(20) << "NAMA" 
              << setw(15) << "TELEPON" << setw(15) << "POIN" 
              << setw(12) << "TIER" << setw(23) << "TOTAL BELANJA" << endl;
-        cout << string(80, '-') << "\n";
+        cout << string(90, '-') << "\n";
         
         for (int i = 0; i < limit; i++) {
             const Member& member = allMembers[i];
             string tier = getTierByPoin(member.poin);
             
             string rankIcon;
-            if (i == 0) rankIcon = "1st ";
-            else if (i == 1) rankIcon = "2nd ";
-            else if (i == 2) rankIcon = "3rd ";
+            if (i == 0) rankIcon = "🥇 ";
+            else if (i == 1) rankIcon = "🥈 ";
+            else if (i == 2) rankIcon = "🥉 ";
             else rankIcon = to_string(i + 1) + ". ";
             
             cout << left << setw(5) << rankIcon
@@ -630,7 +645,7 @@ public:
                  << setw(12) << tier
                  << "Rp " << fixed << setprecision(0) << setw(20) << member.totalBelanja << endl;
         }
-        cout << string(80, '=') << "\n";
+        cout << string(90, '=') << "\n";
     }
     
     void tampilkanTierBenefits() {
@@ -649,17 +664,17 @@ public:
         cout << left << setw(12) << "Silver"
              << setw(10) << "500"
              << fixed << setprecision(0) << setw(10) << "5%"
-             << setw(38) << "Diskon 5% + Prioritas Antrian" << endl;
+             << setw(38) << "Diskon 5% + Prioritas Antrian + Verifikasi KTP" << endl;
              
         cout << left << setw(12) << "Gold"
              << setw(10) << "2000"
              << fixed << setprecision(0) << setw(10) << "10%"
-             << setw(38) << "Diskon 10% + Free Drink setiap 5x kunjungan" << endl;
+             << setw(38) << "Diskon 10% + Free Drink setiap 5x kunjungan + Birthday Reward" << endl;
              
         cout << left << setw(12) << "Platinum"
              << setw(10) << "5000"
              << fixed << setprecision(0) << setw(10) << "15%"
-             << setw(38) << "Diskon 15% + Private Event Access" << endl;
+             << setw(38) << "Diskon 15% + Private Event Access + Priority Delivery" << endl;
              
         cout << string(70, '=') << "\n";
     }
@@ -672,9 +687,14 @@ private:
     struct WaitlistEntry {
         string nama;
         string noTelepon;
+        string noKTP;
         int jumlahOrang;
         string waktuMasuk;
         string status;
+        
+        bool operator==(const WaitlistEntry& other) const {
+            return noTelepon == other.noTelepon;
+        }
     };
     
     CircularLinkedList<WaitlistEntry> waitlist;
@@ -683,18 +703,20 @@ private:
 public:
     WaitlistSystem() : nextWaitlistId(1) {}
     
-    void tambahKeWaitlist(const string& nama, const string& noTelepon, int jumlahOrang) {
+    void tambahKeWaitlist(const string& nama, const string& noTelepon, 
+                         const string& noKTP, int jumlahOrang) {
         WaitlistEntry entry;
         entry.nama = nama;
         entry.noTelepon = noTelepon;
+        entry.noKTP = noKTP;
         entry.jumlahOrang = jumlahOrang;
         entry.waktuMasuk = getSimpleTime();
         entry.status = "Menunggu";
         
         waitlist.add(entry);
-        cout << "\n " << nama << " ditambahkan ke waitlist!" << endl;
-        cout << "   Nomor antrian: " << nextWaitlistId++ << endl;
-        cout << "   Perkiraan waktu tunggu: " << waitlist.getSize() * 10 << " menit" << endl;
+        cout << "\n ✅ " << nama << " ditambahkan ke waitlist!" << endl;
+        cout << "   📋 Nomor antrian: " << nextWaitlistId++ << endl;
+        cout << "   ⏱️  Perkiraan waktu tunggu: " << waitlist.getSize() * 10 << " menit" << endl;
     }
     
     void panggilBerikutnya() {
@@ -706,10 +728,14 @@ public:
         auto head = waitlist.getHead();
         if (head) {
             WaitlistEntry entry = head->data;
-            cout << "\n MEMANGGIL PELANGGAN:" << endl;
-            cout << "   Nama: " << entry.nama << endl;
-            cout << "   Jumlah orang: " << entry.jumlahOrang << endl;
-            cout << "   No. Telepon: " << entry.noTelepon << endl;
+            cout << "\n 📢 MEMANGGIL PELANGGAN:" << endl;
+            cout << "   👤 Nama: " << entry.nama << endl;
+            cout << "   👥 Jumlah orang: " << entry.jumlahOrang << endl;
+            cout << "   📞 No. Telepon: " << entry.noTelepon << endl;
+            if (!entry.noKTP.empty()) {
+                cout << "   🆔 KTP: XXXX-XXXX-XXXX-" 
+                     << entry.noKTP.substr(entry.noKTP.length() - 4) << endl;
+            }
             
             waitlist.rotate();
         }
@@ -721,29 +747,36 @@ public:
             return;
         }
         
-        cout << "\n" << string(60, '=') << "\n";
+        cout << "\n" << string(80, '=') << "\n";
         cout << "               DAFTAR WAITLIST\n";
-        cout << string(60, '=') << "\n";
+        cout << string(80, '=') << "\n";
         cout << left << setw(20) << "NAMA" 
              << setw(15) << "TELEPON" 
+             << setw(20) << "KTP" 
              << setw(10) << "JUMLAH" 
              << setw(12) << "WAKTU MASUK" 
              << setw(10) << "STATUS" << endl;
-        cout << string(60, '-') << "\n";
+        cout << string(80, '-') << "\n";
         
         auto current = waitlist.getHead();
         int count = 0;
         do {
             WaitlistEntry entry = current->data;
+            string ktpDisplay = "Tidak ada";
+            if (!entry.noKTP.empty()) {
+                ktpDisplay = "XXXX-XXXX-XXXX-" + entry.noKTP.substr(entry.noKTP.length() - 4);
+            }
+            
             cout << left << setw(20) << entry.nama 
                  << setw(15) << entry.noTelepon 
+                 << setw(20) << ktpDisplay
                  << setw(10) << entry.jumlahOrang 
                  << setw(12) << entry.waktuMasuk 
                  << setw(10) << entry.status << endl;
             current = current->next;
             count++;
         } while (current != waitlist.getHead() && count < waitlist.getSize());
-        cout << string(60, '=') << "\n";
+        cout << string(80, '=') << "\n";
     }
     
     int getJumlahWaitlist() const {
@@ -758,9 +791,14 @@ private:
     struct Feedback {
         string nama;
         string noTelepon;
+        string noKTP;
         int rating;
         string komentar;
         string tanggal;
+        
+        bool operator==(const Feedback& other) const {
+            return noTelepon == other.noTelepon;
+        }
     };
     
     CircularLinkedList<Feedback> feedbackList;
@@ -769,7 +807,8 @@ private:
 public:
     FeedbackSystem() : averageRating(0.0) {}
     
-    void tambahFeedback(const string& nama, const string& noTelepon, int rating, const string& komentar) {
+    void tambahFeedback(const string& nama, const string& noTelepon, 
+                       const string& noKTP, int rating, const string& komentar) {
         if (rating < 1 || rating > 5) {
             cout << " Rating harus antara 1-5!" << endl;
             return;
@@ -778,6 +817,7 @@ public:
         Feedback feedback;
         feedback.nama = nama;
         feedback.noTelepon = noTelepon;
+        feedback.noKTP = noKTP;
         feedback.rating = rating;
         feedback.komentar = komentar;
         feedback.tanggal = getCurrentDate();
@@ -785,7 +825,7 @@ public:
         feedbackList.add(feedback);
         hitungRatingRataRata();
         
-        cout << "\n Terima kasih atas feedback Anda!" << endl;
+        cout << "\n ✅ Terima kasih atas feedback Anda!" << endl;
     }
     
     void tampilkanFeedbackTerbaru(int jumlah = 5) {
@@ -794,11 +834,11 @@ public:
             return;
         }
         
-        cout << "\n" << string(70, '=') << "\n";
+        cout << "\n" << string(80, '=') << "\n";
         cout << "              FEEDBACK PELANGGAN\n";
-        cout << string(70, '=') << "\n";
-        cout << "Rating Rata-rata: " << fixed << setprecision(1) << averageRating << "/5" << endl;
-        cout << string(70, '-') << "\n";
+        cout << string(80, '=') << "\n";
+        cout << "⭐ Rating Rata-rata: " << fixed << setprecision(1) << averageRating << "/5" << endl;
+        cout << string(80, '-') << "\n";
         
         auto current = feedbackList.getHead();
         int count = 0;
@@ -806,15 +846,21 @@ public:
             if (count >= jumlah) break;
             
             Feedback feedback = current->data;
-            cout << "\n " << feedback.nama << endl;
-            cout << "   Rating: " << feedback.rating << "/5" << endl;
-            cout << "   Komentar: \"" << feedback.komentar << "\"" << endl;
-            cout << "   Tanggal: " << feedback.tanggal << endl;
+            
+            // Tampilkan stars
+            string stars = "";
+            for (int i = 0; i < feedback.rating; i++) stars += "★";
+            for (int i = feedback.rating; i < 5; i++) stars += "☆";
+            
+            cout << "\n 👤 " << feedback.nama << endl;
+            cout << "   " << stars << " (" << feedback.rating << "/5)" << endl;
+            cout << "   💬 \"" << feedback.komentar << "\"" << endl;
+            cout << "   📅 " << feedback.tanggal << endl;
             
             current = current->next;
             count++;
         } while (current != feedbackList.getHead() && count < feedbackList.getSize());
-        cout << string(70, '=') << "\n";
+        cout << string(80, '=') << "\n";
     }
     
     void tampilkanStatistikRating() {
@@ -824,15 +870,19 @@ public:
         }
         
         int ratingCount[6] = {0};
+        int ktpVerifiedCount = 0;
         
         auto current = feedbackList.getHead();
         do {
             Feedback feedback = current->data;
             ratingCount[feedback.rating]++;
+            if (!feedback.noKTP.empty()) {
+                ktpVerifiedCount++;
+            }
             current = current->next;
         } while (current != feedbackList.getHead());
         
-        cout << "\n STATISTIK RATING:" << endl;
+        cout << "\n 📊 STATISTIK FEEDBACK:" << endl;
         cout << "=====================" << endl;
         for (int i = 5; i >= 1; i--) {
             cout << i << " bintang: " << ratingCount[i] << " feedback";
@@ -842,8 +892,9 @@ public:
             }
             cout << endl;
         }
-        cout << "Total Feedback: " << feedbackList.getSize() << endl;
-        cout << "Rating Rata-rata: " << fixed << setprecision(1) << averageRating << "/5" << endl;
+        cout << "👥 Total Feedback: " << feedbackList.getSize() << endl;
+        cout << "✅ KTP Terverifikasi: " << ktpVerifiedCount << endl;
+        cout << "📈 Rating Rata-rata: " << fixed << setprecision(1) << averageRating << "/5" << endl;
     }
     
     double getRatingRataRata() const {
@@ -879,11 +930,13 @@ private:
     
 public:
     PromoSystem() {
-        promoList.add("Diskon 20% untuk pembelian minuman kedua!");
-        promoList.add("Gratis croissant dengan pembelian kopi di atas Rp 30.000!");
-        promoList.add("Poin double untuk member hari ini!");
-        promoList.add("Cashback 10% untuk pembayaran via QRIS!");
-        promoList.add("Buy 1 Get 1 untuk Thai Tea!");
+        promoList.add("🎁 Diskon 20% untuk pembelian minuman kedua!");
+        promoList.add("🥐 Gratis croissant dengan pembelian kopi di atas Rp 30.000!");
+        promoList.add("⭐ Poin double untuk member hari ini!");
+        promoList.add("💳 Cashback 10% untuk pembayaran via QRIS!");
+        promoList.add("🫖 Buy 1 Get 1 untuk Thai Tea!");
+        promoList.add("🎂 Birthday Special: Free drink untuk member ulang tahun!");
+        promoList.add("📋 KTP Verification Bonus: Dapatkan 500 poin!");
     }
     
     void addPromo(const string& promo) {
@@ -904,7 +957,7 @@ public:
     }
     
     void displayRotatingPromo() {
-        cout << "\n PROMO SPESIAL HARI INI: " << getCurrentPromo() << endl;
+        cout << "\n 🎪 PROMO SPESIAL HARI INI: " << getCurrentPromo() << endl;
         nextPromo();
     }
 };
@@ -920,7 +973,7 @@ public:
     
     void tambahAntrian(const string& namaPelanggan) {
         antrian.add(namaPelanggan);
-        cout << " " << namaPelanggan << " ditambahkan ke antrian." << endl;
+        cout << " ✅ " << namaPelanggan << " ditambahkan ke antrian." << endl;
     }
     
     void layaniBerikutnya() {
@@ -929,15 +982,15 @@ public:
             return;
         }
         
-        cout << " Melayani: " << antrian.getFront() << endl;
+        cout << " 📢 Melayani: " << antrian.getFront() << endl;
         antrian.rotate();
     }
     
     void hapusDariAntrian(const string& namaPelanggan) {
         if (antrian.remove(namaPelanggan)) {
-            cout << " " << namaPelanggan << " dihapus dari antrian." << endl;
+            cout << " ✅ " << namaPelanggan << " dihapus dari antrian." << endl;
         } else {
-            cout << " " << namaPelanggan << " tidak ditemukan dalam antrian." << endl;
+            cout << " ❌ " << namaPelanggan << " tidak ditemukan dalam antrian." << endl;
         }
     }
     
@@ -960,9 +1013,9 @@ public:
 
 class CafeKenanganSystem {
 private:
-    SimpleVector<Menu> menuList;
-    SimpleVector<Pesanan> pesananList;
-    SimpleVector<Member> memberList;
+    SimpleArray<Menu> menuList;
+    SimpleArray<Pesanan> pesananList;
+    SimpleArray<Member> memberList;
     int nextMenuId;
     int nextPesananId;
     double pajakRate;
@@ -974,9 +1027,10 @@ private:
     WaitlistSystem waitlistSystem;
     FeedbackSystem feedbackSystem;
     LoyaltyProgram loyaltyProgram;
+    int nextMemberId;
 
 public:
-    CafeKenanganSystem() : nextMenuId(1), nextPesananId(1), pajakRate(0.1), serviceCharge(0.05) {
+    CafeKenanganSystem() : nextMenuId(1), nextPesananId(1), nextMemberId(1), pajakRate(0.1), serviceCharge(0.05) {
         initMenuAwal();
         loadData();
         initRekomendasiMenu();
@@ -1067,7 +1121,7 @@ public:
     }
 
     string generateMemberId() {
-        return "MEM" + to_string(memberList.size() + 1) + to_string(simpleRandom(100));
+        return "MEM" + to_string(nextMemberId++);
     }
 
     void tambahMenu(string nama, string kategori, double harga, int stok) {
@@ -1078,7 +1132,7 @@ public:
         newMenu.harga = harga;
         newMenu.stok = stok;
         newMenu.terjual = 0;
-        menuList.push_back(newMenu);
+        menuList.add(newMenu);
     }
 
     void tampilkanMenu(string kategoriFilter = "") {
@@ -1114,17 +1168,21 @@ public:
     }
 
     Menu* cariMenuById(int id) {
-        for (int i = 0; i < menuList.size(); i++) {
-            if (menuList[i].id == id) {
-                return &menuList[i];
-            }
-        }
-        return NULL;
+        return menuList.findById(id);
     }
 
     Member* cariMemberByTelepon(string noTelepon) {
         for (int i = 0; i < memberList.size(); i++) {
             if (memberList[i].noTelepon == noTelepon) {
+                return &memberList[i];
+            }
+        }
+        return NULL;
+    }
+    
+    Member* cariMemberByKTP(string noKTP) {
+        for (int i = 0; i < memberList.size(); i++) {
+            if (memberList[i].noKTP == noKTP) {
                 return &memberList[i];
             }
         }
@@ -1174,10 +1232,7 @@ public:
         
         for (int i = 0; i < menuList.size(); i++) {
             if (menuList[i].id == id) {
-                for (int j = i; j < menuList.size() - 1; j++) {
-                    menuList[j] = menuList[j + 1];
-                }
-                menuList.pop_back();
+                menuList.removeAt(i);
                 cout << "\n Menu berhasil dihapus!\n";
                 return;
             }
@@ -1187,27 +1242,74 @@ public:
 
     void daftarMember() {
         Member newMember;
-        newMember.id = generateMemberId();
+        newMember.id = nextMemberId++;
         newMember.tanggalDaftar = getCurrentDate();
         newMember.poin = 0;
         newMember.totalBelanja = 0;
         
-        cout << "\n=== PENDAFTARAN MEMBER BARU ===\n";
+        cout << "\n" << string(60, '=') << "\n";
+        cout << "           PENDAFTARAN MEMBER BARU\n";
+        cout << string(60, '=') << "\n";
+        
         cout << "Nama Lengkap: ";
         getline(cin, newMember.nama);
+        
         cout << "No. Telepon: ";
         getline(cin, newMember.noTelepon);
         
         if (cariMemberByTelepon(newMember.noTelepon) != NULL) {
-            cout << " No. telepon sudah terdaftar!\n";
+            cout << " ❌ No. telepon sudah terdaftar!\n";
             return;
         }
         
-        memberList.push_back(newMember);
+        cout << "No. KTP (16 digit, opsional): ";
+        getline(cin, newMember.noKTP);
+        
+        if (!newMember.noKTP.empty()) {
+            if (cariMemberByKTP(newMember.noKTP) != NULL) {
+                cout << " ❌ KTP sudah terdaftar!\n";
+                return;
+            }
+            
+            if (newMember.noKTP.length() == 16) {
+                bool valid = true;
+                for (char c : newMember.noKTP) {
+                    if (c < '0' || c > '9') {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (valid) {
+                    cout << " ✅ KTP valid!\n";
+                    newMember.poin += 500;
+                    cout << " 🎁 +500 poin bonus untuk verifikasi KTP!\n";
+                } else {
+                    cout << " ⚠️  Format KTP tidak valid (hanya angka)\n";
+                }
+            } else {
+                cout << " ⚠️  KTP harus 16 digit\n";
+            }
+        }
+        
+        cout << "Tanggal Lahir (DD-MM-YYYY, opsional): ";
+        getline(cin, newMember.tanggalLahir);
+        
+        cout << "Alamat (opsional): ";
+        getline(cin, newMember.alamat);
+        
+        memberList.add(newMember);
         loyaltyProgram.addMember(newMember);
         
-        cout << "\n Pendaftaran berhasil! ID Member: " << newMember.id << endl;
-        cout << " Selamat bergabung dengan Loyalty Program Cafe Kopi Kenangan!" << endl;
+        cout << "\n" << string(50, '=') << "\n";
+        cout << " ✅ PENDAFTARAN BERHASIL!\n";
+        cout << string(50, '=') << "\n";
+        cout << " ID Member: MEM" << newMember.id << endl;
+        cout << " Poin Awal: " << newMember.poin << endl;
+        if (!newMember.noKTP.empty()) {
+            cout << " 🛡️  KTP: XXXX-XXXX-XXXX-" 
+                 << newMember.noKTP.substr(newMember.noKTP.length() - 4) << " (TERLINDUNGI)\n";
+        }
+        cout << "\n Selamat bergabung dengan Loyalty Program Cafe Kopi Kenangan!\n";
     }
 
     void tampilkanMember() {
@@ -1216,23 +1318,29 @@ public:
             return;
         }
         
-        cout << "\n" << string(80, '=') << "\n";
+        cout << "\n" << string(100, '=') << "\n";
         cout << "                      DAFTAR MEMBER\n";
-        cout << string(80, '=') << "\n";
+        cout << string(100, '=') << "\n";
         cout << left << setw(10) << "ID" << setw(20) << "NAMA" 
-             << setw(15) << "TELEPON" << setw(10) << "POIN" 
-             << setw(15) << "TOTAL BELANJA" << endl;
-        cout << string(80, '-') << "\n";
+             << setw(15) << "TELEPON" << setw(20) << "KTP" 
+             << setw(10) << "POIN" << setw(15) << "TOTAL BELANJA" << endl;
+        cout << string(100, '-') << "\n";
         
         for (int i = 0; i < memberList.size(); i++) {
             const Member& member = memberList[i];
-            cout << left << setw(10) << member.id 
-                 << setw(20) << member.nama 
+            string ktpDisplay = "Tidak ada";
+            if (!member.noKTP.empty()) {
+                ktpDisplay = "XXXX-XXXX-XXXX-" + member.noKTP.substr(member.noKTP.length() - 4);
+            }
+            
+            cout << left << setw(10) << "MEM" + to_string(member.id)
+                 << setw(20) << (member.nama.length() > 18 ? member.nama.substr(0, 15) + "..." : member.nama)
                  << setw(15) << member.noTelepon 
+                 << setw(20) << ktpDisplay
                  << setw(10) << member.poin 
                  << "Rp " << setw(12) << fixed << setprecision(0) << member.totalBelanja << endl;
         }
-        cout << string(80, '=') << "\n";
+        cout << string(100, '=') << "\n";
     }
 
     void buatPesanan() {
@@ -1257,18 +1365,36 @@ public:
         cout << "No. Telepon: ";
         getline(cin, newPesanan.noTelepon);
         
+        cout << "No. KTP (opsional): ";
+        getline(cin, newPesanan.noKTP);
+        
         Member* member = cariMemberByTelepon(newPesanan.noTelepon);
+        if (member == NULL && !newPesanan.noKTP.empty()) {
+            member = cariMemberByKTP(newPesanan.noKTP);
+        }
+        
         double diskonLoyalty = 0.0;
         string tier = "Bronze";
         
         if (member != NULL) {
-            cout << " Member ditemukan: " << member->nama << " (Poin: " << member->poin << ")\n";
+            cout << " ✅ Member ditemukan: " << member->nama << " (Poin: " << member->poin << ")\n";
+            
+            // Cek ulang tahun
+            string today = getCurrentDate();
+            if (!member->tanggalLahir.empty() && 
+                member->tanggalLahir.length() >= 5 &&
+                member->tanggalLahir.substr(0, 5) == today.substr(0, 5)) {
+                cout << "\n 🎉 SELAMAT ULANG TAHUN " << member->nama << "! 🎂\n";
+                cout << " 🎁 Dapatkan free birthday drink hari ini!\n";
+                member->poin += 100;
+                cout << " ⭐ +100 poin ulang tahun!\n";
+            }
             
             tier = loyaltyProgram.getTierByPoin(member->poin);
             diskonLoyalty = loyaltyProgram.getDiskonByTier(tier);
             
             if (diskonLoyalty > 0) {
-                cout << " Tier: " << tier << " (Diskon " << (diskonLoyalty * 100) << "%)\n";
+                cout << " 🏆 Tier: " << tier << " (Diskon " << (diskonLoyalty * 100) << "%)\n";
             }
         }
         
@@ -1303,17 +1429,17 @@ public:
                     item.harga = menu->harga;
                     item.subtotal = menu->harga * jumlah;
 
-                    newPesanan.items.push_back(item);
+                    newPesanan.items.add(item);
                     menu->stok -= jumlah;
                     menu->terjual += jumlah;
                     newPesanan.totalHarga += item.subtotal;
 
-                    cout << " " << menu->nama << " x" << jumlah << " ditambahkan (Rp " << item.subtotal << ")\n";
+                    cout << " ✅ " << menu->nama << " x" << jumlah << " ditambahkan (Rp " << item.subtotal << ")\n";
                 } else {
-                    cout << " Stok tidak mencukupi! Stok tersedia: " << menu->stok << endl;
+                    cout << " ❌ Stok tidak mencukupi! Stok tersedia: " << menu->stok << endl;
                 }
             } else {
-                cout << " Menu dengan ID " << menuId << " tidak ditemukan!\n";
+                cout << " ❌ Menu dengan ID " << menuId << " tidak ditemukan!\n";
             }
 
             cout << "\nTambah menu lain? (y/n): ";
@@ -1321,7 +1447,7 @@ public:
             clearCin();
         } while (tambahLagi == 'y' || tambahLagi == 'Y');
 
-        if (!newPesanan.items.empty()) {
+        if (newPesanan.items.size() > 0) {
             double diskonAmount = newPesanan.totalHarga * diskonLoyalty;
             newPesanan.totalHarga -= diskonAmount;
             
@@ -1356,15 +1482,15 @@ public:
                 
                 loyaltyProgram.updateMember(oldMember, *member);
                 
-                cout << " Mendapatkan " << earnedPoints << " poin! Total poin: " << member->poin << endl;
+                cout << " ⭐ Mendapatkan " << earnedPoints << " poin! Total poin: " << member->poin << endl;
                 
                 string newTier = loyaltyProgram.getTierByPoin(member->poin);
                 if (newTier != tier) {
-                    cout << " SELAMAT! Anda naik ke tier " << newTier << "!\n";
+                    cout << " 🎉 SELAMAT! Anda naik ke tier " << newTier << "!\n";
                 }
             }
             
-            pesananList.push_back(newPesanan);
+            pesananList.add(newPesanan);
             
             if (newPesanan.tipePesanan == "Dine-in") {
                 antrianSystem.tambahAntrian(newPesanan.namaPelanggan);
@@ -1374,7 +1500,7 @@ public:
             cout << "           PESANAN BERHASIL DIBUAT!\n";
             cout << string(60, '=') << "\n";
             
-            mintaFeedback(newPesanan.namaPelanggan, newPesanan.noTelepon);
+            mintaFeedback(newPesanan.namaPelanggan, newPesanan.noTelepon, newPesanan.noKTP);
             
             tampilkanStrukPesanan(newPesanan);
         } else {
@@ -1382,7 +1508,7 @@ public:
         }
     }
     
-    void mintaFeedback(const string& nama, const string& noTelepon) {
+    void mintaFeedback(const string& nama, const string& noTelepon, const string& noKTP) {
         cout << "\n=== BANTU KAMI MENJADI LEBIH BAIK ===\n";
         cout << "Berikan rating untuk pengalaman Anda (1-5): ";
         
@@ -1395,7 +1521,7 @@ public:
             string komentar;
             getline(cin, komentar);
             
-            feedbackSystem.tambahFeedback(nama, noTelepon, rating, komentar);
+            feedbackSystem.tambahFeedback(nama, noTelepon, noKTP, rating, komentar);
         }
     }
 
@@ -1407,6 +1533,10 @@ public:
         cout << "Tanggal     : " << pesanan.tanggal << endl;
         cout << "Pelanggan   : " << pesanan.namaPelanggan << endl;
         cout << "Telepon     : " << pesanan.noTelepon << endl;
+        if (!pesanan.noKTP.empty()) {
+            cout << "KTP         : XXXX-XXXX-XXXX-" 
+                 << pesanan.noKTP.substr(pesanan.noKTP.length() - 4) << endl;
+        }
         cout << "Tipe        : " << pesanan.tipePesanan << endl;
         cout << "Status      : " << pesanan.status << endl;
         cout << string(50, '-') << "\n";
@@ -1603,18 +1733,18 @@ public:
                 
                 loyaltyProgram.updateMember(oldMember, *member);
                 
-                cout << " Redeem berhasil! Anda mendapatkan: " << hadiah[pilihan-1] << endl;
-                cout << " Sisa poin: " << member->poin << endl;
+                cout << " ✅ Redeem berhasil! Anda mendapatkan: " << hadiah[pilihan-1] << endl;
+                cout << " 📉 Sisa poin: " << member->poin << endl;
                 
                 if (pilihan == 5) {
                     string newTier = loyaltyProgram.getTierByPoin(member->poin + 2000);
-                    cout << " Selamat! Anda mendapatkan akses ke tier " << newTier << " untuk 1 bulan!\n";
+                    cout << " 🎉 Selamat! Anda mendapatkan akses ke tier " << newTier << " untuk 1 bulan!\n";
                 }
             } else {
-                cout << " Poin tidak mencukupi! Poin dibutuhkan: " << poinDibutuhkan[pilihan-1] << endl;
+                cout << " ❌ Poin tidak mencukupi! Poin dibutuhkan: " << poinDibutuhkan[pilihan-1] << endl;
             }
         } else {
-            cout << " Pilihan tidak valid!\n";
+            cout << " ❌ Pilihan tidak valid!\n";
         }
     }
 
@@ -1636,18 +1766,20 @@ public:
 
             switch (pilihan) {
                 case 1: {
-                    string nama, noTelepon;
+                    string nama, noTelepon, noKTP;
                     int jumlahOrang;
                     
                     cout << "Nama Pelanggan: ";
                     getline(cin, nama);
                     cout << "No. Telepon: ";
                     getline(cin, noTelepon);
+                    cout << "No. KTP (opsional): ";
+                    getline(cin, noKTP);
                     cout << "Jumlah Orang: ";
                     cin >> jumlahOrang;
                     clearCin();
                     
-                    waitlistSystem.tambahKeWaitlist(nama, noTelepon, jumlahOrang);
+                    waitlistSystem.tambahKeWaitlist(nama, noTelepon, noKTP, jumlahOrang);
                     break;
                 }
                 case 2:
@@ -1686,20 +1818,22 @@ public:
 
             switch (pilihan) {
                 case 1: {
-                    string nama, noTelepon, komentar;
+                    string nama, noTelepon, noKTP, komentar;
                     int rating;
                     
                     cout << "Nama Anda: ";
                     getline(cin, nama);
                     cout << "No. Telepon: ";
                     getline(cin, noTelepon);
+                    cout << "No. KTP (opsional): ";
+                    getline(cin, noKTP);
                     cout << "Rating (1-5): ";
                     cin >> rating;
                     clearCin();
                     cout << "Komentar: ";
                     getline(cin, komentar);
                     
-                    feedbackSystem.tambahFeedback(nama, noTelepon, rating, komentar);
+                    feedbackSystem.tambahFeedback(nama, noTelepon, noKTP, rating, komentar);
                     break;
                 }
                 case 2:
@@ -1748,19 +1882,23 @@ public:
                     loyaltyProgram.tampilkanTierBenefits();
                     break;
                 case 4: {
-                    // Simple statistics
                     if (memberList.empty()) {
                         cout << "\n Belum ada member.\n";
                     } else {
                         int totalPoin = 0;
                         double totalBelanja = 0;
+                        int ktpVerified = 0;
                         for (int i = 0; i < memberList.size(); i++) {
                             totalPoin += memberList[i].poin;
                             totalBelanja += memberList[i].totalBelanja;
+                            if (!memberList[i].noKTP.empty()) {
+                                ktpVerified++;
+                            }
                         }
-                        cout << "\n STATISTIK LOYALTY:\n";
+                        cout << "\n 📊 STATISTIK LOYALTY:\n";
                         cout << "=====================\n";
                         cout << "Total Member: " << memberList.size() << endl;
+                        cout << "KTP Terverifikasi: " << ktpVerified << endl;
                         cout << "Total Poin: " << totalPoin << endl;
                         cout << "Total Belanja: Rp " << fixed << setprecision(0) << totalBelanja << endl;
                         cout << "Rata-rata Poin: " << (memberList.size() > 0 ? totalPoin / memberList.size() : 0) << endl;
@@ -1889,6 +2027,7 @@ public:
         for (int i = 0; i < memberList.size(); i++) {
             const Member& member = memberList[i];
             memberFile << member.id << "|" << member.nama << "|" << member.noTelepon << "|"
+                      << member.noKTP << "|" << member.tanggalLahir << "|" << member.alamat << "|"
                       << member.poin << "|" << member.totalBelanja << "|" << member.tanggalDaftar << "\n";
         }
         
@@ -1900,73 +2039,64 @@ public:
         ifstream menuFile("menu_data.txt");
         ifstream memberFile("member_data.txt");
         
-        if (!menuFile) {
-            return;
-        }
-        
-        string line;
-        
-        while (getline(menuFile, line)) {
-            SimpleVector<string> tokens;
-            string token;
-            size_t start = 0;
-            size_t end = line.find('|');
-            
-            while (end != string::npos) {
-                token = line.substr(start, end - start);
-                tokens.push_back(token);
-                start = end + 1;
-                end = line.find('|', start);
-            }
-            token = line.substr(start);
-            tokens.push_back(token);
-            
-            if (tokens.size() == 6) {
-                Menu menu;
-                menu.id = stringToInt(tokens[0]);
-                menu.nama = tokens[1];
-                menu.kategori = tokens[2];
-                menu.harga = stringToDouble(tokens[3]);
-                menu.stok = stringToInt(tokens[4]);
-                menu.terjual = stringToInt(tokens[5]);
-                menuList.push_back(menu);
-                if (menu.id >= nextMenuId) {
-                    nextMenuId = menu.id + 1;
+        if (menuFile) {
+            string line;
+            while (getline(menuFile, line)) {
+                stringstream ss(line);
+                string token;
+                SimpleArray<string> tokens;
+                
+                while (getline(ss, token, '|')) {
+                    tokens.add(token);
+                }
+                
+                if (tokens.size() == 6) {
+                    Menu menu;
+                    menu.id = stringToInt(tokens[0]);
+                    menu.nama = tokens[1];
+                    menu.kategori = tokens[2];
+                    menu.harga = stringToDouble(tokens[3]);
+                    menu.stok = stringToInt(tokens[4]);
+                    menu.terjual = stringToInt(tokens[5]);
+                    menuList.add(menu);
+                    if (menu.id >= nextMenuId) {
+                        nextMenuId = menu.id + 1;
+                    }
                 }
             }
+            menuFile.close();
         }
         
         if (memberFile) {
+            string line;
             while (getline(memberFile, line)) {
-                SimpleVector<string> tokens;
+                stringstream ss(line);
                 string token;
-                size_t start = 0;
-                size_t end = line.find('|');
+                SimpleArray<string> tokens;
                 
-                while (end != string::npos) {
-                    token = line.substr(start, end - start);
-                    tokens.push_back(token);
-                    start = end + 1;
-                    end = line.find('|', start);
+                while (getline(ss, token, '|')) {
+                    tokens.add(token);
                 }
-                token = line.substr(start);
-                tokens.push_back(token);
                 
-                if (tokens.size() == 6) {
+                if (tokens.size() >= 9) {
                     Member member;
-                    member.id = tokens[0];
+                    member.id = stringToInt(tokens[0]);
                     member.nama = tokens[1];
                     member.noTelepon = tokens[2];
-                    member.poin = stringToInt(tokens[3]);
-                    member.totalBelanja = stringToDouble(tokens[4]);
-                    member.tanggalDaftar = tokens[5];
-                    memberList.push_back(member);
+                    member.noKTP = tokens[3];
+                    member.tanggalLahir = tokens[4];
+                    member.alamat = tokens[5];
+                    member.poin = stringToInt(tokens[6]);
+                    member.totalBelanja = stringToDouble(tokens[7]);
+                    member.tanggalDaftar = tokens[8];
+                    memberList.add(member);
+                    if (member.id >= nextMemberId) {
+                        nextMemberId = member.id + 1;
+                    }
                 }
             }
+            memberFile.close();
         }
-        
-        menuFile.close();
-        if (memberFile) memberFile.close();
     }
 
     void menuAdmin() {
@@ -1991,7 +2121,7 @@ public:
             cout << "14. Kelola Antrian\n";
             cout << "15. Kelola Promo\n";
           	cout << "16. Kelola Rekomendasi Menu\n";
-          	cout << "17. Kelola Waitlist\n";
+            cout << "17. Kelola Waitlist\n";
             cout << "18. Kelola Feedback\n";
             cout << "19. Kelola Loyalty Program\n";
             cout << "0.  Kembali ke Menu Utama\n";
@@ -2180,18 +2310,20 @@ public:
                     daftarMember();
                     break;
                 case 9: {
-                    string nama, noTelepon;
+                    string nama, noTelepon, noKTP;
                     int jumlahOrang;
                     
                     cout << "Nama Anda: ";
                     getline(cin, nama);
                     cout << "No. Telepon: ";
                     getline(cin, noTelepon);
+                    cout << "No. KTP (opsional): ";
+                    getline(cin, noKTP);
                     cout << "Jumlah Orang: ";
                     cin >> jumlahOrang;
                     clearCin();
                     
-                    waitlistSystem.tambahKeWaitlist(nama, noTelepon, jumlahOrang);
+                    waitlistSystem.tambahKeWaitlist(nama, noTelepon, noKTP, jumlahOrang);
                     break;
                 }
                 case 10:
@@ -2257,4 +2389,3 @@ int main() {
     
     return 0;
 }
-
